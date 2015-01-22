@@ -1,8 +1,9 @@
 #include "pebble.h"
 
 #define MATH_PI 3.141592653589793238462
-#define NUM_DISCS 20
+#define NUM_DISCS 0
 #define DISC_DENSITY 0.25
+#define DISC_RADIUS 3
 #define ACCEL_RATIO 0.05
 #define ACCEL_STEP_MS 50
 
@@ -40,7 +41,7 @@ static void disc_init(Disc *disc) {
   disc->pos.y = frame.size.h/2;
   disc->vel.x = 0;
   disc->vel.y = 0;
-  disc->radius = 3;
+  disc->radius = DISC_RADIUS;
   disc->mass = disc_calc_mass(disc) + next_radius;
   next_radius += 0.5;
 }
@@ -99,6 +100,15 @@ static void timer_callback(void *data) {
   timer = app_timer_register(ACCEL_STEP_MS, timer_callback, NULL);
 }
 
+static void update_time() {
+  // Get a tm structure
+  time_t temp = time(NULL); 
+  struct tm *tick_time = localtime(&temp);
+  char buffer[] = "00";
+  // Write the current minutes into the buffer
+  strftime(buffer, sizeof("00"), "%M", tick_time);
+}
+
 static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect frame = window_frame = layer_get_frame(window_layer);
@@ -116,6 +126,10 @@ static void window_unload(Window *window) {
   layer_destroy(disc_layer);
 }
 
+static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
+  update_time();
+}
+
 static void init(void) {
   window = window_create();
   window_set_window_handlers(window, (WindowHandlers) {
@@ -126,7 +140,7 @@ static void init(void) {
   window_set_background_color(window, GColorBlack);
 
   accel_data_service_subscribe(0, NULL);
-
+  tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
   timer = app_timer_register(ACCEL_STEP_MS, timer_callback, NULL);
 }
 
