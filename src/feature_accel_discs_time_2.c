@@ -104,9 +104,9 @@ static void update_time() {
   // Get a tm structure
   time_t temp = time(NULL); 
   struct tm *tick_time = localtime(&temp);
-
-  // Write the current hours and minutes into the NUM_DISC
-    strftime(NUM_DISCS, 2, "%M", tick_time);
+  char buffer[] = "00";
+  // Write the current minutes into the buffer
+  strftime(buffer, sizeof("00"), "%M", tick_time);
 }
 
 static void window_load(Window *window) {
